@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#f5f0ff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>習慣環 · HabitLoop</title>
+<link rel="manifest" href="data:application/json,{%22name%22:%22HabitLoop%22,%22short_name%22:%22習慣環%22,%22display%22:%22standalone%22,%22background_color%22:%22%23f5f0ff%22,%22theme_color%22:%22%23f5f0ff%22}">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f7f4ff;
+    --surface: #ffffff;
+    --surface2: #f0ecff;
+    --border: rgba(120,80,220,0.10);
+    --accent: #7c5cfc;
+    --accent2: #f59e42;
+    --text: #2d2250;
+    --muted: #9b94b8;
+    --success: #34c77b;
+    --danger: #f05c5c;
+    --radius: 16px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans TC', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 70% 55% at 85% 10%, rgba(180,150,255,0.25) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 45% at 5% 85%, rgba(255,200,120,0.18) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 40% at 50% 50%, rgba(160,220,255,0.10) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .app {
+    position: relative;
+    z-index: 1;
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 0 0 100px;
+  }
+
+  /* Header */
+  .header {
+    padding: 48px 24px 24px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+  }
+
+  .header-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 32px;
+    letter-spacing: -0.5px;
+    line-height: 1;
+  }
+
+  .header-title span {
+    display: block;
+    font-family: 'Noto Sans TC', sans-serif;
+    font-size: 12px;
+    font-weight: 300;
+    color: var(--muted);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .date-badge {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 8px 14px;
+    font-size: 12px;
+    color: var(--muted);
+    text-align: right;
+  }
+
+  .date-badge strong {
+    display: block;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1;
+  }
+
+  /* Streak bar */
+  .streak-section {
+    padding: 0 24px 24px;
+  }
+
+  .streak-card {
+    background: linear-gradient(135deg, rgba(124,92,252,0.12), rgba(245,158,66,0.10));
+    border: 1px solid rgba(124,92,252,0.20);
+    border-radius: var(--radius);
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 4px 20px rgba(124,92,252,0.08);
+  }
+
+  .streak-icon {
+    font-size: 36px;
+    line-height: 1;
+  }
+
+  .streak-info strong {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--accent2);
+    display: block;
+    line-height: 1;
+  }
+
+  .streak-info p {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .streak-mini-dots {
+    margin-left: auto;
+    display: flex;
+    gap: 4px;
+  }
+
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--border);
+  }
+
+  .dot.on { background: var(--accent); }
+  .dot.today { background: var(--accent2); box-shadow: 0 0 6px var(--accent2); }
+
+  /* Week view */
+  .week-section {
+    padding: 0 24px 24px;
+  }
+
+  .section-label {
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+
+  .week-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+  }
+
+  .week-day {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .week-day-label {
+    font-size: 10px;
+    color: var(--muted);
+  }
+
+  .week-day-circle {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+
+  .week-day-circle.today {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+    box-shadow: 0 0 12px rgba(124,92,252,0.3);
+  }
+
+  .week-day-circle.done {
+    background: rgba(52,199,123,0.12);
+    border-color: var(--success);
+    color: var(--success);
+  }
+
+  /* Habits */
+  .habits-section {
+    padding: 0 24px;
+  }
+
+  .habits-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+
+  .btn-add {
+    background: var(--accent);
+    border: none;
+    color: white;
+    border-radius: 10px;
+    padding: 6px 14px;
+    font-size: 13px;
+    font-family: 'Noto Sans TC', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .btn-add:active { transform: scale(0.96); }
+
+  .habit-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .habit-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    transition: all 0.2s;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(80,60,180,0.06);
+  }
+
+  .habit-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--habit-color, var(--accent));
+    border-radius: 3px 0 0 3px;
+  }
+
+    .habit-card.checked {
+    background: #f0fff7;
+    border-color: rgba(52,199,123,0.25);
+  }
+
+  .habit-card.checked::before {
+    background: var(--success);
+  }
+
+  .habit-check {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2px solid var(--habit-color, var(--accent));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 14px;
+    transition: all 0.2s;
+  }
+
+  .habit-card.checked .habit-check {
+    background: var(--success);
+    border-color: var(--success);
+  }
+
+  .habit-info { flex: 1 }
+
+  .habit-name {
+    font-size: 15px;
+    font-weight: 500;
+  }
+
+  .habit-card.checked .habit-name {
+    color: var(--muted);
+    text-decoration: line-through;
+  }
+
+  .habit-meta {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .habit-streak-badge {
+    font-size: 11px;
+    background: rgba(245,158,66,0.12);
+    color: var(--accent2);
+    border-radius: 6px;
+    padding: 2px 8px;
+    white-space: nowrap;
+  }
+
+  .habit-delete {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 16px;
+    cursor: pointer;
+    padding: 4px;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .habit-card:hover .habit-delete { opacity: 1; }
+
+  /* Progress */
+  .progress-section {
+    padding: 0 24px 24px;
+    margin-top: 24px;
+  }
+
+  .progress-track {
+    height: 6px;
+    background: var(--surface2);
+    border-radius: 99px;
+    overflow: hidden;
+    margin: 10px 0 6px;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 99px;
+    transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  /* AI button */
+  .ai-section {
+    padding: 8px 24px 0;
+  }
+
+  .btn-ai {
+    width: 100%;
+    background: linear-gradient(135deg, rgba(124,92,252,0.1), rgba(232,168,124,0.1));
+    border: 1px solid rgba(124,92,252,0.3);
+    color: var(--text);
+    border-radius: var(--radius);
+    padding: 16px;
+    font-size: 15px;
+    font-family: 'Noto Sans TC', sans-serif;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s;
+  }
+
+  .btn-ai:active { transform: scale(0.98); }
+  .btn-ai:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* AI Panel */
+  .ai-panel {
+    margin: 16px 24px 0;
+    background: var(--surface);
+    border: 1px solid rgba(124,92,252,0.2);
+    border-radius: var(--radius);
+    overflow: hidden;
+    display: none;
+  }
+
+  .ai-panel.show { display: block; animation: slideIn 0.3s ease; }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .ai-panel-header {
+    padding: 14px 18px;
+    background: rgba(124,92,252,0.08);
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--accent);
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .ai-panel-body {
+    padding: 18px;
+    font-size: 14px;
+    line-height: 1.8;
+    color: var(--text);
+    white-space: pre-wrap;
+    min-height: 80px;
+  }
+
+  .typing-dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: blink 1s infinite;
+    margin: 0 2px;
+  }
+  .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes blink {
+    0%,80%,100% { opacity: 0.2; }
+    40% { opacity: 1; }
+  }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(45,34,80,0.45);
+    z-index: 100;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s;
+  }
+
+  .modal-overlay.show {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .modal {
+    background: var(--surface);
+    border-radius: 24px 24px 0 0;
+    padding: 28px 24px 48px;
+    width: 100%;
+    max-width: 480px;
+    transform: translateY(20px);
+    transition: transform 0.3s;
+  }
+
+  .modal-overlay.show .modal { transform: translateY(0); }
+
+  .modal h3 {
+    font-size: 18px;
+    margin-bottom: 20px;
+  }
+
+  .modal label {
+    display: block;
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    margin-top: 16px;
+  }
+
+  .modal input, .modal select {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 14px;
+    color: var(--text);
+    font-size: 15px;
+    font-family: 'Noto Sans TC', sans-serif;
+    outline: none;
+  }
+
+  .modal input:focus, .modal select:focus {
+    border-color: var(--accent);
+  }
+
+  .modal select option { background: var(--surface2); }
+
+  .color-picker {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .color-swatch {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.2s;
+  }
+
+  .color-swatch.selected {
+    border-color: white;
+    transform: scale(1.15);
+  }
+
+  .modal-btns {
+    display: flex;
+    gap: 10px;
+    margin-top: 24px;
+  }
+
+  .btn-cancel {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    border-radius: 12px;
+    padding: 14px;
+    font-size: 15px;
+    font-family: 'Noto Sans TC', sans-serif;
+    cursor: pointer;
+  }
+
+  .btn-save {
+    flex: 2;
+    background: var(--accent);
+    border: none;
+    color: white;
+    border-radius: 12px;
+    padding: 14px;
+    font-size: 15px;
+    font-family: 'Noto Sans TC', sans-serif;
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--muted);
+  }
+
+  .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+  .empty-state p { font-size: 14px; }
+
+  /* API Key section */
+  .apikey-section {
+    padding: 0 24px;
+    margin-top: 20px;
+  }
+
+  .apikey-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--muted);
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .apikey-row {
+    display: none;
+    margin-top: 10px;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .apikey-row.show { display: flex; }
+
+  .apikey-input {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    color: var(--text);
+    font-size: 13px;
+    font-family: monospace;
+    outline: none;
+  }
+
+  .apikey-input:focus { border-color: var(--accent); }
+
+  .btn-save-key {
+    background: var(--surface2);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 12px;
+    font-family: 'Noto Sans TC', sans-serif;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  /* Confetti */
+  .confetti-piece {
+    position: fixed;
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    pointer-events: none;
+    z-index: 999;
+    animation: confettiFall linear forwards;
+  }
+
+  @keyframes confettiFall {
+    0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-title">
+      <span>習慣環</span>
+      HabitLoop
+    </div>
+    <div class="date-badge" id="dateBadge">
+      <strong id="dayNum">--</strong>
+      <span id="monthName">---</span>
+    </div>
+  </div>
+
+  <!-- Streak -->
+  <div class="streak-section">
+    <div class="streak-card">
+      <div class="streak-icon">🔥</div>
+      <div class="streak-info">
+        <strong id="streakNum">0</strong>
+        <p>連續打卡天數</p>
+      </div>
+      <div class="streak-mini-dots" id="miniDots"></div>
+    </div>
+  </div>
+
+  <!-- Week view -->
+  <div class="week-section">
+    <div class="section-label">本週概覽</div>
+    <div class="week-grid" id="weekGrid"></div>
+  </div>
+
+  <!-- Progress -->
+  <div class="progress-section">
+    <div class="section-label">今日進度</div>
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill" style="width:0%"></div>
+    </div>
+    <div class="progress-label">
+      <span id="progressText">0 / 0 項已完成</span>
+      <span id="progressPct">0%</span>
+    </div>
+  </div>
+
+  <!-- Habits -->
+  <div class="habits-section">
+    <div class="habits-header">
+      <div class="section-label" style="margin:0">今日習慣</div>
+      <button class="btn-add" onclick="openModal()">＋ 新增</button>
+    </div>
+    <div class="habit-list" id="habitList"></div>
+  </div>
+
+  <!-- API Key -->
+  <div class="apikey-section">
+    <div class="apikey-toggle" onclick="toggleApiKey()">
+      🔑 <span>設定 Claude API Key（AI 分析用）</span>
+      <span id="apiKeyStatus"></span>
+    </div>
+    <div class="apikey-row" id="apikeyRow">
+      <input type="password" class="apikey-input" id="apikeyInput" placeholder="sk-ant-...">
+      <button class="btn-save-key" onclick="saveApiKey()">儲存</button>
+    </div>
+  </div>
+
+  <!-- AI -->
+  <div class="ai-section">
+    <button class="btn-ai" id="btnAI" onclick="runAI()">
+      ✦ AI 習慣分析與建議
+    </button>
+  </div>
+
+  <div class="ai-panel" id="aiPanel">
+    <div class="ai-panel-header">✦ Claude 分析報告</div>
+    <div class="ai-panel-body" id="aiBody"></div>
+  </div>
+
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal">
+    <h3>新增習慣</h3>
+    <label>習慣名稱</label>
+    <input type="text" id="habitNameInput" placeholder="例：每天喝 2000ml 水" maxlength="20">
+    <label>描述（選填）</label>
+    <input type="text" id="habitDescInput" placeholder="例：健康從水開始" maxlength="30">
+    <label>顏色標記</label>
+    <div class="color-picker" id="colorPicker"></div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal()">取消</button>
+      <button class="btn-save" onclick="saveHabit()">新增習慣</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── State ───────────────────────────────────────────────────────────────────
+const COLORS = ['#7c6af7','#e8a87c','#6fcf97','#eb5757','#56ccf2','#f2c94c','#bb87fc','#f97696'];
+let selectedColor = COLORS[0];
+let habits = JSON.parse(localStorage.getItem('hl_habits') || '[]');
+let logs   = JSON.parse(localStorage.getItem('hl_logs')   || '{}');
+let apiKey = localStorage.getItem('hl_apikey') || '';
+
+const todayKey = () => new Date().toISOString().slice(0,10);
+
+function save() {
+  localStorage.setItem('hl_habits', JSON.stringify(habits));
+  localStorage.setItem('hl_logs',   JSON.stringify(logs));
+}
+
+// ─── Date ────────────────────────────────────────────────────────────────────
+function initDate() {
+  const now = new Date();
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  document.getElementById('dayNum').textContent   = now.getDate();
+  document.getElementById('monthName').textContent = months[now.getMonth()] + ' ' + now.getFullYear();
+}
+
+// ─── Week Grid ───────────────────────────────────────────────────────────────
+function renderWeek() {
+  const grid = document.getElementById('weekGrid');
+  const days = ['日','一','二','三','四','五','六'];
+  const today = new Date();
+  const todayStr = todayKey();
+  // Find Monday of this week
+  const dow = today.getDay(); // 0=Sun
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - ((dow + 6) % 7));
+
+  grid.innerHTML = '';
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    const ds = d.toISOString().slice(0,10);
+    const isToday = ds === todayStr;
+    const todayLog = logs[ds] || {};
+    const allDone = habits.length > 0 && habits.every(h => todayLog[h.id]);
+
+    const div = document.createElement('div');
+    div.className = 'week-day';
+    div.innerHTML = `
+      <div class="week-day-label">${['一','二','三','四','五','六','日'][i]}</div>
+      <div class="week-day-circle ${isToday ? 'today' : allDone && habits.length>0 ? 'done' : ''}">${d.getDate()}</div>
+    `;
+    grid.appendChild(div);
+  }
+}
+
+// ─── Streak ──────────────────────────────────────────────────────────────────
+function calcStreak() {
+  let streak = 0;
+  let d = new Date();
+  while (true) {
+    const ds = d.toISOString().slice(0,10);
+    const log = logs[ds] || {};
+    const allDone = habits.length > 0 && habits.every(h => log[h.id]);
+    if (allDone) { streak++; d.setDate(d.getDate()-1); }
+    else break;
+  }
+  return streak;
+}
+
+function renderStreak() {
+  const streak = calcStreak();
+  document.getElementById('streakNum').textContent = streak;
+
+  // Mini dots = last 7 days
+  const dots = document.getElementById('miniDots');
+  dots.innerHTML = '';
+  const todayStr = todayKey();
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const ds = d.toISOString().slice(0,10);
+    const log = logs[ds] || {};
+    const allDone = habits.length > 0 && habits.every(h => log[h.id]);
+    const isToday = ds === todayStr;
+    const dot = document.createElement('div');
+    dot.className = 'dot' + (isToday ? ' today' : allDone && habits.length>0 ? ' on' : '');
+    dots.appendChild(dot);
+  }
+}
+
+// ─── Habit Streak ────────────────────────────────────────────────────────────
+function habitStreak(habitId) {
+  let streak = 0;
+  let d = new Date();
+  while (true) {
+    const ds = d.toISOString().slice(0,10);
+    if (logs[ds] && logs[ds][habitId]) { streak++; d.setDate(d.getDate()-1); }
+    else break;
+  }
+  return streak;
+}
+
+// ─── Progress ────────────────────────────────────────────────────────────────
+function renderProgress() {
+  const todayLog = logs[todayKey()] || {};
+  const total = habits.length;
+  const done  = habits.filter(h => todayLog[h.id]).length;
+  const pct   = total === 0 ? 0 : Math.round(done/total*100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = `${done} / ${total} 項已完成`;
+  document.getElementById('progressPct').textContent  = pct + '%';
+}
+
+// ─── Habit List ──────────────────────────────────────────────────────────────
+function renderHabits() {
+  const list = document.getElementById('habitList');
+  const todayLog = logs[todayKey()] || {};
+
+  if (habits.length === 0) {
+    list.innerHTML = `<div class="empty-state"><div class="icon">🌱</div><p>還沒有習慣，點右上角「新增」開始吧</p></div>`;
+    renderProgress(); renderStreak();
+    return;
+  }
+
+  list.innerHTML = '';
+  habits.forEach(h => {
+    const checked = !!todayLog[h.id];
+    const hs = habitStreak(h.id);
+    const card = document.createElement('div');
+    card.className = 'habit-card' + (checked ? ' checked' : '');
+    card.style.setProperty('--habit-color', h.color);
+    card.innerHTML = `
+      <div class="habit-check">${checked ? '✓' : ''}</div>
+      <div class="habit-info">
+        <div class="habit-name">${h.name}</div>
+        ${h.desc ? `<div class="habit-meta">${h.desc}</div>` : ''}
+      </div>
+      ${hs > 0 ? `<div class="habit-streak-badge">🔥 ${hs}天</div>` : ''}
+      <button class="habit-delete" onclick="deleteHabit('${h.id}',event)" title="刪除">✕</button>
+    `;
+    card.addEventListener('click', () => toggleHabit(h.id));
+    list.appendChild(card);
+  });
+
+  renderProgress();
+  renderStreak();
+  renderWeek();
+}
+
+// ─── Toggle ──────────────────────────────────────────────────────────────────
+function toggleHabit(id) {
+  const key = todayKey();
+  if (!logs[key]) logs[key] = {};
+  const wasChecked = !!logs[key][id];
+  logs[key][id] = !wasChecked;
+  save();
+  renderHabits();
+  if (!wasChecked) confetti();
+}
+
+// ─── Confetti ────────────────────────────────────────────────────────────────
+function confetti() {
+  const colors = ['#7c6af7','#e8a87c','#6fcf97','#f2c94c','#56ccf2'];
+  for (let i = 0; i < 18; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti-piece';
+    el.style.cssText = `
+      left:${Math.random()*100}vw;
+      top:-10px;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      animation-duration:${0.8+Math.random()*1.2}s;
+      animation-delay:${Math.random()*0.3}s;
+      transform:rotate(${Math.random()*360}deg);
+    `;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 2000);
+  }
+}
+
+// ─── Delete ──────────────────────────────────────────────────────────────────
+function deleteHabit(id, e) {
+  e.stopPropagation();
+  if (!confirm('確定要刪除這個習慣？')) return;
+  habits = habits.filter(h => h.id !== id);
+  save();
+  renderHabits();
+}
+
+// ─── Modal ───────────────────────────────────────────────────────────────────
+function openModal() {
+  document.getElementById('habitNameInput').value = '';
+  document.getElementById('habitDescInput').value = '';
+  selectedColor = COLORS[0];
+  renderColorPicker();
+  document.getElementById('modalOverlay').classList.add('show');
+  setTimeout(() => document.getElementById('habitNameInput').focus(), 300);
+}
+
+function closeModal(e) {
+  if (e && e.target !== document.getElementById('modalOverlay')) return;
+  document.getElementById('modalOverlay').classList.remove('show');
+}
+
+function renderColorPicker() {
+  const cp = document.getElementById('colorPicker');
+  cp.innerHTML = '';
+  COLORS.forEach(c => {
+    const s = document.createElement('div');
+    s.className = 'color-swatch' + (c === selectedColor ? ' selected' : '');
+    s.style.background = c;
+    s.onclick = () => { selectedColor = c; renderColorPicker(); };
+    cp.appendChild(s);
+  });
+}
+
+function saveHabit() {
+  const name = document.getElementById('habitNameInput').value.trim();
+  if (!name) { alert('請輸入習慣名稱'); return; }
+  const desc = document.getElementById('habitDescInput').value.trim();
+  habits.push({ id: Date.now().toString(), name, desc, color: selectedColor });
+  save();
+  document.getElementById('modalOverlay').classList.remove('show');
+  renderHabits();
+}
+
+// ─── API Key ─────────────────────────────────────────────────────────────────
+function toggleApiKey() {
+  const row = document.getElementById('apikeyRow');
+  row.classList.toggle('show');
+  if (row.classList.contains('show')) {
+    document.getElementById('apikeyInput').value = apiKey;
+  }
+}
+
+function saveApiKey() {
+  apiKey = document.getElementById('apikeyInput').value.trim();
+  localStorage.setItem('hl_apikey', apiKey);
+  document.getElementById('apiKeyStatus').textContent = apiKey ? '✓ 已設定' : '';
+  document.getElementById('apikeyRow').classList.remove('show');
+}
+
+// ─── AI Analysis ─────────────────────────────────────────────────────────────
+async function runAI() {
+  if (!apiKey) {
+    alert('請先設定 Claude API Key（點頁面下方的「設定 API Key」）');
+    return;
+  }
+
+  const panel = document.getElementById('aiPanel');
+  const body  = document.getElementById('aiBody');
+  const btn   = document.getElementById('btnAI');
+
+  panel.classList.add('show');
+  body.innerHTML = '<span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>';
+  btn.disabled = true;
+
+  // Build summary
+  const summary = buildSummary();
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 600,
+        system: '你是一位溫暖、務實的習慣教練。根據使用者的習慣打卡數據，給出具體的觀察和可行的建議。用繁體中文，條列式，語氣親切不說教，300字以內。',
+        messages: [{ role: 'user', content: summary }]
+      })
+    });
+
+    const data = await res.json();
+    if (data.content && data.content[0]) {
+      body.textContent = data.content[0].text;
+    } else {
+      body.textContent = '分析失敗，請確認 API Key 是否正確。';
+    }
+  } catch(e) {
+    body.textContent = '連線失敗：' + e.message;
+  }
+
+  btn.disabled = false;
+}
+
+function buildSummary() {
+  const today = todayKey();
+  const lines = [`今天日期：${today}`, `習慣清單：`];
+  habits.forEach(h => {
+    const hs = habitStreak(h.id);
+    // Last 7 days completion
+    let last7 = 0;
+    for (let i = 0; i < 7; i++) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const ds = d.toISOString().slice(0,10);
+      if (logs[ds] && logs[ds][h.id]) last7++;
+    }
+    lines.push(`- ${h.name}：近7天完成${last7}次，目前連續${hs}天`);
+  });
+  const todayLog = logs[today] || {};
+  const done = habits.filter(h => todayLog[h.id]).length;
+  lines.push(`今日完成：${done}/${habits.length}`);
+  return lines.join('\n');
+}
+
+// ─── API Key status ───────────────────────────────────────────────────────────
+function initApiKeyStatus() {
+  if (apiKey) document.getElementById('apiKeyStatus').textContent = '✓ 已設定';
+}
+
+// ─── Init ────────────────────────────────────────────────────────────────────
+initDate();
+renderColorPicker();
+renderHabits();
+initApiKeyStatus();
+renderWeek();
+</script>
+</body>
+</html>
